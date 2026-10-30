@@ -1,0 +1,38 @@
+# --- Dados reais (contêm informações pessoais e financeiras) ---------------
+# Nunca versionar bilhetes, faturas ou relatórios gerados.
+/pdf/
+/fatura/
+*.csv
+*.xlsx
+# Valores esperados dos documentos reais (formato em docs/desenvolvimento.md)
+/tests/real_documents.json
+
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Ambientes virtuais ---------------------------------------------------
+venv/
+.venv/
+env/
+
+# --- Build do executável (PyInstaller) ------------------------------------
+/build/
+/dist/
+*.spec
+*.exe
+*.zip
+
+# --- Editores e sistema ---------------------------------------------------
+.vscode/
+.claude/
+.idea/
+Thumbs.db
+Desktop.ini
+.DS_Store

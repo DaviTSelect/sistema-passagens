@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "conferencia-passagens"
+dynamic = ["version"]
+description = "Confere PDFs de bilhetes aéreos contra faturas de agência e gera um relatório CSV."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "PyPDF2>=3.0",
+    "PyMuPDF>=1.24",
+    "pytesseract>=0.3.10",
+    "Pillow>=10.0",
+    "PySide6>=6.5",
+    "pypdf>=6.0,<7.0",
+    "openpyxl>=3.1,<4.0",
+    "pypdfium2>=5.0,<6.0",
+    "rapidocr-onnxruntime>=1.4,<2.0",
+]
+
+[project.optional-dependencies]
+build = ["pyinstaller>=6.0"]
+
+[project.scripts]
+conferencia-passagens = "passagem.main:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "passagem.version.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,26 @@
+name: Testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Instalar dependências
+        run: python -m pip install -r requirements.txt
+      # Os testes com PDFs reais são pulados automaticamente no CI,
+      # pois as pastas pdf/ e fatura/ não são versionadas.
+      - name: Executar testes
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -v
