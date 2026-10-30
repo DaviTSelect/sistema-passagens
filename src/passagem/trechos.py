@@ -17,8 +17,6 @@ from io import BytesIO
 from pathlib import Path
 import re
 
-from pypdf import PdfReader
-
 from .planilha import salvar_planilha
 
 MESES = {
@@ -54,6 +52,7 @@ def _contar_caracteres(texto: str) -> int:
 
 def _ler_texto_pdf(caminho: Path) -> tuple[str, bool]:
     """Retorna ``(texto, usou_ocr)``. O OCR só é aplicado em arquivos digitalizados."""
+    from pypdf import PdfReader  # pesado; importado só quando a tarefa começa
     conteudo = caminho.read_bytes()
     digest = hashlib.sha256(conteudo).hexdigest()
     if digest in _textos_em_cache:

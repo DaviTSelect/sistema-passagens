@@ -13,10 +13,12 @@ em ``_montar_paginas`` e trate o novo modo em ``_selecoes`` e ``iniciar_tarefa``
 """
 from __future__ import annotations
 
+import ctypes
 from datetime import datetime
 import sys
 import threading
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPainterPath, QPen
@@ -26,9 +28,15 @@ from PySide6.QtWidgets import (
 )
 
 from . import auto_update
-from .conference import ConferenceResult, executar_conferencia
-from .trechos import ExtractionResult, executar_extracao
 from .version import __version__
+
+# Importados só para checagem de tipo; o carregamento real ocorre ao iniciar a tarefa.
+if TYPE_CHECKING:
+    from .conference import ConferenceResult
+    from .trechos import ExtractionResult
+
+# Mantém o handle do mutex aberto enquanto o processo executa (instância única).
+_MUTEX_INSTANCIA = None
 
 # Identidade visual padronizada com os demais painéis da automação.
 BG = '#203447'
@@ -83,6 +91,16 @@ MODE_TEXTS = {
         'done': 'Extração concluída',
     },
 }
+
+
+def _garantir_instancia_unica() -> bool:
+    """Cria um mutex nomeado no Windows. Retorna False se já há outra instância."""
+    global _MUTEX_INSTANCIA
+    if sys.platform != 'win32':
+        return True
+    ERROR_ALREADY_EXISTS = 183
+    _MUTEX_INSTANCIA = ctypes.windll.kernel32.CreateMutexW(None, False, 'SistemaPassagens_Mutex_v1')
+    return ctypes.windll.kernel32.GetLastError() != ERROR_ALREADY_EXISTS
 
 
 def caminho_recurso(filename: str) -> Path:
@@ -600,6 +618,7 @@ class App(QWidget):
         threading.Thread(target=target, args=args, daemon=True).start()
 
     def _executar_conferencia(self, tickets: Path, invoice: Path, output_file: Path):
+        from .conference import executar_conferencia  # carregado só aqui; evita 50MB na abertura
         try:
             result = executar_conferencia(tickets, invoice, output_file)
             self.sinal_tarefa_concluida.emit(MODE_TEXTS[MODE_CONFERENCE]['done'], formatar_resumo_conferencia(result, output_file))
@@ -607,6 +626,7 @@ class App(QWidget):
             self.sinal_tarefa_falhou.emit(str(exc))
 
     def _executar_extracao(self, folder: Path, output_file: Path):
+        from .trechos import executar_extracao  # carregado só aqui; evita 50MB na abertura
         try:
             result = executar_extracao(folder, output_file)
             self.sinal_tarefa_concluida.emit(MODE_TEXTS[MODE_EXTRACTION]['done'], formatar_resumo_extracao(result, output_file))
@@ -629,11 +649,17 @@ class App(QWidget):
         self._reiniciar_se_pendente()
 
     def closeEvent(self, event):
-        # Fechar no meio da gravação deixaria um relatório incompleto.
         if self.started:
-            event.ignore()
-        else:
-            event.accept()
+            resposta = QMessageBox.question(
+                self, 'Fechar',
+                'Uma tarefa está em andamento. Fechar agora pode gerar um arquivo incompleto.\n\nFechar mesmo assim?',
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if resposta == QMessageBox.StandardButton.No:
+                event.ignore()
+                return
+        event.accept()
 
     # ------------------------------------------------------------------
     # Atualização automática
@@ -691,6 +717,9 @@ def abrir_janela() -> int:
     """Abre a janela principal e bloqueia até ela ser fechada."""
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
+    if not _garantir_instancia_unica():
+        QMessageBox.information(None, 'Sistema de passagens', 'O programa já está aberto.')
+        return 0
     icon = caminho_recurso(ICON_FILENAME)
     if icon.is_file():
         app.setWindowIcon(QIcon(str(icon)))

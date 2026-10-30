@@ -14,11 +14,6 @@ import re
 import shutil
 import unicodedata
 
-from PyPDF2 import PdfReader
-import pymupdf
-import pytesseract
-from PIL import Image
-
 from .models import InvoiceEntry, Ticket
 
 __all__ = ["InvoiceEntry", "Ticket", "ler_fatura", "ler_bilhete", "ler_pdf"]
@@ -48,9 +43,6 @@ _PADRAO_LANCAMENTO_FATURA = re.compile(
     r"([A-Z0-9]{6})"
     r"(?![A-Z0-9])"
 )
-
-if TESSERACT_PATH.is_file():
-    pytesseract.pytesseract.tesseract_cmd = str(TESSERACT_PATH)
 
 
 # ============================================================
@@ -116,6 +108,7 @@ def converter_valor(value: str) -> Decimal | None:
 
 def _ler_texto_selecionavel(path: Path) -> str:
     """Tenta extrair texto diretamente com PyPDF2."""
+    from PyPDF2 import PdfReader  # pesado; importado só quando a tarefa começa
     reader = PdfReader(str(path))
 
     if reader.is_encrypted:
@@ -134,9 +127,14 @@ def _ler_texto_selecionavel(path: Path) -> str:
 
 def _executar_ocr(path: Path) -> str:
     """Executa OCR em todas as páginas do PDF."""
-    if not TESSERACT_PATH.is_file():
-        found = shutil.which("tesseract")
+    import pytesseract  # pesado; importado só quando a tarefa começa
+    import pymupdf      # pesado; importado só quando a tarefa começa
+    from PIL import Image  # pesado; importado só quando a tarefa começa
 
+    if TESSERACT_PATH.is_file():
+        pytesseract.pytesseract.tesseract_cmd = str(TESSERACT_PATH)
+    else:
+        found = shutil.which("tesseract")
         if found:
             pytesseract.pytesseract.tesseract_cmd = found
         else:
