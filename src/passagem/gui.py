@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QLabel, QLayout, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget,
 )
 
+
 from . import auto_update
 from .version import __version__
 
@@ -688,10 +689,10 @@ class App(QWidget):
             self.sinal_download.emit(True)
             self.sinal_status_atualizacao.emit(UPDATE_BUSY, f'Baixando {release["tag_name"]}...')
             auto_update.instalar(release, auto_update.NOME_EXE)
-        except Exception:
+        except Exception as exc:
             # Falha de rede ou de release não pode impedir a conferência nem parecer "atualizado".
             self.sinal_download.emit(False)
-            self.sinal_status_atualizacao.emit(UPDATE_UNKNOWN, f'v{__version__} · não foi possível verificar')
+            self.sinal_status_atualizacao.emit(UPDATE_UNKNOWN, f'v{__version__} · {exc}')
             return
         self.sinal_status_atualizacao.emit(UPDATE_BUSY, 'Atualização pronta, reiniciando...')
         self.sinal_atualizacao_pronta.emit()

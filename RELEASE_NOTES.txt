@@ -1,0 +1,32 @@
+CENTRAL DE PASSAGENS v1.0.4 — NOTAS DE LANÇAMENTO
+
+CORREÇÕES DE EXTRAÇÃO
+  - Layout FACTO/LATAM: localizador colado ao "ADT" sem separador agora
+    é detectado corretamente (ex: 2305266453JAEVVGADT - NOME).
+  - Localizador retorna o último candidato do nome de arquivo para evitar
+    que nomes de pessoas (ex: KAMILA) sobreponham o código de reserva.
+  - Rótulos adicionais reconhecidos: "PNR", "Número da reserva",
+    "Código da reserva" (com ou sem "da").
+  - Localizador aceita quebra de linha entre o rótulo e o valor
+    (formato GOL/Azul direto).
+  - Passageiro: detecta valor na linha seguinte ao rótulo (GOL/Azul).
+  - Passageiro FACTO/LATAM: texto "VIP MUNDI" é removido da captura;
+    pronomes de tratamento (MR/MRS/MS/MISS) são descartados.
+  - Fallback de passageiro por nome de arquivo aceita nome de um único token.
+  - Voos: companhias adicionadas: AZUL (AD), AVIANCA (AV), KL, AF, LH,
+    BA, EK, QR, TK, EY, AC, AZ, LX, O6; dígito antes do código agora é
+    aceito (ex: horário colado "16:35LA 3667").
+
+CORREÇÕES DE CONFERÊNCIA
+  - Comparação de passageiro ignora espaços internos que o PyPDF2 insere
+    dentro das palavras e pronomes de tratamento (MR/MRS).
+
+ATUALIZAÇÃO AUTOMÁTICA
+  - SHA-256 opcional: releases sem digest não bloqueiam mais a atualização.
+  - Backup do executável anterior é removido após a troca bem-sucedida.
+  - Executável reiniciado com WindowStyle Normal (janela visível).
+  - Erro de atualização exibe a mensagem real da exceção na barra de status.
+
+BUILD
+  - Versão lida automaticamente de version.py; pasta de saída: dist\v<versão>.
+  - Executável renomeado para sistema-passagens.exe.

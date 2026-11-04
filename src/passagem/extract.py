@@ -258,20 +258,23 @@ def _buscar_localizador(text: str, filename: str) -> str:
         if number_match and not number_match.group(1).isdigit():
             return number_match.group(1).upper()
 
-    # Layout FACTO/LATAM em que a tabela é extraída fora de ordem: o
-    # localizador fica logo antes do passageiro (``957 ABC123 ADT - NOME``).
-    before_passenger = re.search(r"\b([A-Z0-9]{6})\s+ADT\s*[-:#]", text)
+    # Layout FACTO/LATAM: o PDF cola o localizador ao "ADT" sem espaço nem word-boundary
+    # (ex: ``2305266453JAEVVGADT - NOME``), então \b e \s+ falhariam aqui.
+    before_passenger = re.search(r"([A-Z0-9]{6})\s*ADT\s*[-:#]", text)
     if before_passenger and not before_passenger.group(1).isdigit():
         return before_passenger.group(1)
 
     # Só os rótulos ignoram maiúsculas: localizadores são sempre maiúsculos,
     # e assim palavras comuns como ``Viagem`` não são confundidas com eles.
+    # \n?\s* permite que o localizador fique na linha seguinte ao rótulo
+    # (formato comum em bilhetes diretos GOL/Azul).
     patterns = (
-        r"\b(?i:localizador(?:\s+da\s+reserva)?|c[oó]digo\s+de\s+reserva|"
+        r"\b(?i:localizador(?:\s+da\s+reserva)?|c[oó]digo\s+(?:da\s+)?reserva|"
+        r"n[uú]mero\s+da\s+reserva|pnr|"
         r"reserva|booking\s+reference|record\s+locator|"
-        r"locator|loc)\s*[:#-]?\s*([A-Z0-9]{6})\b",
+        r"locator|loc)\s*[:#-]?\s*\n?\s*([A-Z0-9]{6})\b",
 
-        r"\b(?i:GOL|LATAM|TAM)\b.{0,100}?"
+        r"\b(?i:GOL|LATAM|TAM|AZUL|AVIANCA)\b.{0,100}?"
         r"\b([A-Z0-9]{6})\b",
     )
 
@@ -286,53 +289,65 @@ def _buscar_localizador(text: str, filename: str) -> str:
     # Só utiliza o nome do arquivo se houver um candidato de seis
     # caracteres maiúsculos claramente isolado por separadores, para que
     # nomes como ``fatura.pdf`` não virem localizador.
+    # Retorna o ÚLTIMO candidato: localizadores ficam no final do nome do arquivo
+    # e um nome de 6 letras (ex: KAMILA) não deve ter precedência sobre JAEVVG.
     stem = Path(filename).stem
+    candidate = ""
 
     for match in re.finditer(
         r"(?<![A-Za-z0-9])([A-Z0-9]{6})(?![A-Za-z0-9])",
         stem,
     ):
-        candidate = match.group(1)
+        if not match.group(1).isdigit():
+            candidate = match.group(1)
 
-        if not candidate.isdigit():
-            return candidate
-
-    return ""
+    return candidate
 
 
 def _buscar_passageiro(text: str, filename: str) -> str:
     """Procura o nome do passageiro no texto e, por último, no nome do arquivo."""
-    patterns = (
-        # Alguns portais extraem a tabela em uma linha só.  Por isso ADT
-        # não precisa necessariamente ser o primeiro item da linha.
-        r"(?i)\bADT\s*[-:#]\s*([^\r\n]+)",
-        r"(?im)^\s*(?:Pax|Passageiro|Passenger|Nome\s+do\s+passageiro)"
+    # Layout FACTO/LATAM: o PDF cola o localizador ao "ADT" sem separador
+    # (ex: ``JAEVVGADT - NOME``), então \b falharia. O nome pode quebrar para a
+    # linha seguinte; a agência (VIP MUNDI) encerra o trecho capturado.
+    adt_match = re.search(r"(?i)ADT\s*[-:#]\s*([^\r\n]+(?:\n[^\r\n]+)?)", text)
+    if adt_match:
+        raw = adt_match.group(1)
+        raw = re.sub(r"(?i)\s*(?:MRS?\s*)?VIP\s+MUNDI\b.*", "", raw, flags=re.DOTALL)
+        name = normalizar_texto(raw.replace("\n", " ")).strip(" -:")
+        name = re.sub(r"\s+(?:MRS|MR|MS|MISS)$", "", name, flags=re.I)
+        if len(name) >= 5 and not re.search(r"\d{4,}|R\$|TARIFA|TAXA|VOO", name, re.I):
+            return name
+
+    # Rótulo com dois-pontos na mesma linha: "Passageiro: NOME"  (padrão mais comum)
+    match = re.search(
+        r"(?im)^\s*(?:Pax|Passageiro|Passenger|Nome\s+do\s+passageiro|Nome)"
         r"\s*:\s*([^\r\n]+)",
+        text,
     )
+    if match:
+        name = normalizar_texto(match.group(1)).strip(" -:")
+        name = re.sub(r"\s+(?:MRS|MR|MS|MISS)$", "", name, flags=re.I)
+        if len(name) >= 5 and not re.search(r"\d{4,}|R\$|TARIFA|TAXA|VOO", name, re.I):
+            return name
 
-    for pattern in patterns:
-        match = re.search(pattern, text)
+    # Rótulo sozinho numa linha, valor na linha seguinte (formato direto GOL/Azul).
+    match = re.search(
+        r"(?im)^\s*(?:Pax|Passageiro|Passenger)\s*$\n\s*([A-Z][^\r\n]+)",
+        text,
+    )
+    if match:
+        name = normalizar_texto(match.group(1)).strip(" -:")
+        name = re.sub(r"\s+(?:MRS|MR|MS|MISS)$", "", name, flags=re.I)
+        if len(name) >= 5 and not re.search(r"\d{4,}|R\$|TARIFA|TAXA|VOO", name, re.I):
+            return name
 
-        if match:
-            name = normalizar_texto(match.group(1)).strip(" -:")
-            name = re.sub(r"\s+(?:MRS|MR|MS|MISS)$", "", name, flags=re.I)
-
-            if len(name) >= 5 and not re.search(
-                r"\d{4,}|R\$|TARIFA|TAXA|VOO",
-                name,
-                re.I,
-            ):
-                return name
-
-    # Fallback conservador para nomes no arquivo.
+    # Fallback conservador para nomes no arquivo. {0,5} permite nomes de um só token.
     stem = Path(filename).stem
-
     match = re.search(
         r"(?i)([A-ZÀ-ÖØ-Þ][A-ZÀ-ÖØ-Þ]+"
-        r"(?:\s+[A-ZÀ-ÖØ-Þ][A-ZÀ-ÖØ-Þ]+){1,5})",
+        r"(?:\s+[A-ZÀ-ÖØ-Þ][A-ZÀ-ÖØ-Þ]+){0,5})",
         stem,
     )
-
     return normalizar_texto(match.group(1)) if match else ""
 
 
@@ -345,8 +360,9 @@ def _buscar_voos(text: str) -> tuple[str, ...]:
     Reconhece códigos de voo como G3 1651, LA 4794 e JJ 3019.
     """
     pattern = (
-        r"(?<![A-Z0-9])"
-        r"(G3|LA|JJ|AD|2Z|CM|AA|UA|DL|TP|IB|AV)"
+        r"(?<![A-Za-z])"  # permite dígito antes (ex: "16:35LA 3667" colado pelo PyPDF2)
+        r"(G3|LA|JJ|AD|2Z|CM|AA|UA|DL|TP|IB|AV"
+        r"|KL|AF|LH|BA|EK|QR|TK|EY|AC|AZ|LX|O6)"
         r"\s*[- ]?\s*(\d{2,4})"
         r"(?!\d)"
     )

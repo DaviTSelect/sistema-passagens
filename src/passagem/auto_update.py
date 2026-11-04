@@ -18,7 +18,7 @@ import urllib.request
 # Repositório que publica as releases, no formato "usuario/repositorio".
 # O repositório precisa ser público; a API do GitHub não exige autenticação para releases públicas.
 REPO_GITHUB = 'DaviTSelect/sistema-passagens'
-NOME_EXE = 'ConferenciaPassagens.exe'
+NOME_EXE = 'sistema-passagens.exe'
 
 _USER_AGENT = 'kit-funcoes-updater/1.0'
 
@@ -33,7 +33,8 @@ for ($tentativa = 0; $tentativa -lt 60; $tentativa++) {
         if (Test-Path -LiteralPath $Backup) { Remove-Item -LiteralPath $Backup -Force }
         if (Test-Path -LiteralPath $Destino) { Move-Item -LiteralPath $Destino -Destination $Backup }
         Move-Item -LiteralPath $Origem -Destination $Destino
-        Start-Process -FilePath $Destino
+        if (Test-Path -LiteralPath $Backup) { Remove-Item -LiteralPath $Backup -Force -ErrorAction SilentlyContinue }
+        Start-Process -FilePath $Destino -WindowStyle Normal
         exit 0
     } catch {
         if (-not (Test-Path -LiteralPath $Destino) -and (Test-Path -LiteralPath $Backup)) {
@@ -42,7 +43,7 @@ for ($tentativa = 0; $tentativa -lt 60; $tentativa++) {
         Start-Sleep -Seconds 1
     }
 }
-if (Test-Path -LiteralPath $Destino) { Start-Process -FilePath $Destino }
+if (Test-Path -LiteralPath $Destino) { Start-Process -FilePath $Destino -WindowStyle Normal }
 exit 1
 '''
 
@@ -77,14 +78,12 @@ def tem_versao_nova(release: dict, versao_atual: str) -> bool:
 
 
 def instalar(release: dict, nome_exe: str) -> None:
-    """Baixa o EXE, confere o SHA-256 e agenda a troca para quando o processo encerrar."""
+    """Baixa o EXE, confere o SHA-256 (quando disponível) e agenda a troca para quando o processo encerrar."""
     asset = next((a for a in release.get('assets', []) if a['name'] == nome_exe), None)
     if asset is None:
         raise RuntimeError(f'Release sem {nome_exe}')
     esperado = asset.get('digest', '')
-    if not esperado.startswith('sha256:'):
-        raise RuntimeError('Release sem digest SHA-256; atualização recusada')
-    hash_esperado = esperado.split(':', 1)[1].lower()
+    hash_esperado = esperado.split(':', 1)[1].lower() if esperado.startswith('sha256:') else None
     exe_atual = Path(sys.executable).resolve()
     if exe_atual.name.lower() != nome_exe.lower():
         raise RuntimeError(f'O executável instalado deve se chamar {nome_exe}')
@@ -94,15 +93,15 @@ def instalar(release: dict, nome_exe: str) -> None:
     _agendar_troca(pasta, baixado, exe_atual)
 
 
-def _baixar_exe(url: str, destino: Path, hash_esperado: str) -> None:
-    """Salva o arquivo em ``destino`` e o apaga se o SHA-256 não conferir."""
+def _baixar_exe(url: str, destino: Path, hash_esperado: str | None) -> None:
+    """Salva o arquivo em ``destino`` e o apaga se o SHA-256 não conferir (quando fornecido)."""
     h = hashlib.sha256()
     req_asset = urllib.request.Request(url, headers={'User-Agent': _USER_AGENT})
     with urllib.request.urlopen(req_asset, timeout=60) as resposta, open(destino, 'wb') as f:
         while bloco := resposta.read(1048576):
             f.write(bloco)
             h.update(bloco)
-    if h.hexdigest() != hash_esperado:
+    if hash_esperado is not None and h.hexdigest() != hash_esperado:
         destino.unlink(missing_ok=True)
         raise RuntimeError('SHA-256 do EXE baixado não confere')
 

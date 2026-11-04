@@ -5,4 +5,4 @@ Ao publicar uma release, a tag no GitHub deve ser igual, com um ``v`` na frente
 (por exemplo, ``v1.0.0``).
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.4"

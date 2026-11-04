@@ -56,6 +56,8 @@ def comparar(ticket: Ticket, entry: InvoiceEntry | None) -> list[Row]:
             status, issue = STATUS_NOT_FOUND, "Bilhete não localizado na fatura"
         elif label == "Total":
             status, issue = _comparar_valores(ticket_value, invoice_value)
+        elif label == "Passageiro":
+            status, issue = _comparar_passageiro(ticket_value, invoice_value)
         else:
             status, issue = _comparar_textos(ticket_value, invoice_value)
 
@@ -89,6 +91,19 @@ def _comparar_valores(ticket_value: Value, invoice_value: Value) -> tuple[str, s
     if abs(difference) <= TOTAL_TOLERANCE:
         return STATUS_OK, ""
     return STATUS_DIVERGENT, f"Diferença: R$ {difference:+.2f} (bilhete menos fatura)"
+
+
+def _comparar_passageiro(ticket_value: Value, invoice_value: Value) -> tuple[str, str]:
+    """Compara nomes ignorando espaços internos que o PyPDF2 insere dentro das palavras."""
+    if _normalizar_passageiro(ticket_value) == _normalizar_passageiro(invoice_value):
+        return STATUS_OK, ""
+    return STATUS_DIVERGENT, f"Bilhete: {ticket_value or '(vazio)'}; fatura: {invoice_value or '(vazio)'}"
+
+
+def _normalizar_passageiro(value: Value) -> str:
+    """Remove todos os espaços e pronomes de tratamento para comparar nomes IATA."""
+    text = re.sub(r"\s(?:MRS|MR|MS|MISS)(?=\s|$)", "", str(value or "").upper())
+    return re.sub(r"\s+", "", text)
 
 
 def _comparar_textos(ticket_value: Value, invoice_value: Value) -> tuple[str, str]:
