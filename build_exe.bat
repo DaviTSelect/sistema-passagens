@@ -12,7 +12,7 @@ if not exist "%PYTHON%" (
 )
 
 :: Le a versao atual do version.py
-for /f "tokens=3 delims== " %%v in ('findstr "__version__" "%VERSION_FILE%"') do set "VERSAO=%%~v"
+for /f "tokens=2 delims== " %%v in ('findstr "__version__" "%VERSION_FILE%"') do set "VERSAO=%%~v"
 if "%VERSAO%"=="" (
     echo Nao foi possivel ler __version__ de version.py
     exit /b 1
