@@ -2,7 +2,7 @@
 
 ## Requisitos
 
-- Windows com Python 3.10 ou superior.
+- Windows com Python 3.11 ou superior.
 - Dependências Python: `pip install -r requirements.txt` (leitura de PDF, OCR, Excel e PySide6).
 - **Opcional:** [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) com o idioma português (`por`), necessário só para PDFs digitalizados (sem texto selecionável).
 

@@ -29,7 +29,7 @@ As dependências apontam sempre para baixo: `models.py` não conhece ninguém, e
 | Módulo | Responsabilidade |
 |---|---|
 | `models.py` | Dataclasses imutáveis `Ticket` (bilhete) e `InvoiceEntry` (lançamento na fatura). Valores monetários em `Decimal`. |
-| `extract.py` | Lê o texto do PDF (PyPDF2), recorre a OCR (PyMuPDF + Tesseract) quando necessário e extrai os campos com expressões regulares. Expõe `ler_bilhete()` e `ler_fatura()`. |
+| `extract.py` | Lê o texto do PDF (pypdf), recorre a OCR (PyMuPDF + Tesseract) quando necessário e extrai os campos com expressões regulares. Expõe `ler_bilhete()` e `ler_fatura()`. |
 | `report.py` | `comparar()` gera as linhas do relatório para um bilhete; `gravar_csv()` grava o CSV. Define os status e a tolerância do total. |
 | `conference.py` | `executar_conferencia()` lista os PDFs, lê bilhetes e faturas, cruza os registros e grava o relatório. Retorna `ConferenceResult` com a contagem e os avisos. |
 | `gui.py` | Janela PySide6 com a paleta visual padrão dos painéis de automação. Roda a conferência e a verificação de versão em threads, falando com a tela por sinais. |

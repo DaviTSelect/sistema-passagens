@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 
 ## [Não lançado]
 
+## [1.0.5] - 2026-11-05
+
 ### Corrigido
 - Passageiros com sobrenome iniciado por `MR`/`MRS` (por exemplo `MRAZ`) eram truncados na comparação, o que podia gerar um `OK` falso. `MS` e `MISS` também passam a ser ignorados.
 - Valores com ponto de milhar sem centavos (`1.234`) eram lidos como `1,23`.
@@ -11,6 +13,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - Palavras comuns e nomes de arquivo como `fatura.pdf` eram aceitos como localizador; agora ele precisa estar em maiúsculas.
 - O aviso de bilhete sem número afirmava, sem verificar, que o PDF não tinha texto.
 - `instalar.py` falhava por faltar `plugins/auto_update.py`, reconstruído a partir do bytecode que estava salvo como `README (2).md` e `README (3).md`.
+- `.gitignore`: regras globais `*.csv` e `*.xlsx` substituídas por `saida/*.csv` e `saida/*.xlsx` para não ocultar fixtures de teste.
+- `.gitignore`: regra `*.spec` substituída por `*_onefile.spec` e `*_debug.spec`, preservando specs de build intencionais.
 
 ### Alterado
 - A janela usa `passagem.__version__` em vez de repetir o número da versão.
@@ -19,10 +23,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 - `requirements.txt` agora reúne todas as dependências.
 - Funções, métodos e testes renomeados para português, com comentários voltados a futuras implementações. Funções longas de `extract.py`, `gui.py`, `planilha.py`, `trechos.py` e `auto_update.py` foram divididas.
 - A versão agora é definida somente em `src/passagem/version.py`.
+- Dependência `PyPDF2` removida; `extract.py` passa a usar `pypdf` (substituto oficial), já listado como dependência.
+- Python mínimo elevado para 3.11 (Python 3.10 encerrou suporte em outubro de 2026).
+- CI (`tests.yml`): matriz atualizada para Python 3.11 + 3.12; runner passa a usar `pytest` em vez de `unittest discover`.
+- Nome do executável uniformizado para `sistema-passagens.exe` em toda a documentação.
 
 ### Adicionado
 - Unificação com o projeto de extração de trechos: a janela ganhou a função **Extrair trechos**, que grava uma linha por trecho de voo em uma planilha Excel sem duplicar o que já existe. No terminal, use `--trechos` e `--planilha`.
 - Verificação automática de versão ao abrir a janela: a bolinha verde indica versão atualizada confirmada e o executável instala sozinho uma release nova.
+- `.github/workflows/release.yml`: release automática ao criar uma tag `v*`, com validação de tag vs `__version__`, build, upload de artefato e draft release.
+- `requirements-build.txt`: dependências de build separadas (`pyinstaller`).
+- `requirements-test.txt`: dependências de teste separadas (`pytest`, `pytest-qt`).
+- `scripts/build.ps1`: script de build PowerShell usado pelo CI.
 
 ### Removido
 - `interface_conferencia.py` (integrado em `gui.py`), `requirem8ents.txt`, `instalar.py`, `plugins/` e `tests/test_instalar.py`. O atualizador agora faz parte do pacote, em `src/passagem/auto_update.py`.

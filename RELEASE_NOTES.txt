@@ -1,4 +1,4 @@
-CENTRAL DE PASSAGENS v1.0.4 — NOTAS DE LANÇAMENTO
+CENTRAL DE PASSAGENS v1.0.5 — NOTAS DE LANÇAMENTO
 
 CORREÇÕES DE EXTRAÇÃO
   - Layout FACTO/LATAM: localizador colado ao "ADT" sem separador agora

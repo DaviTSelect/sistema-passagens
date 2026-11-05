@@ -7,9 +7,8 @@ name = "conferencia-passagens"
 dynamic = ["version"]
 description = "Confere PDFs de bilhetes aéreos contra faturas de agência e gera um relatório CSV."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-    "PyPDF2>=3.0",
     "PyMuPDF>=1.24",
     "pytesseract>=0.3.10",
     "Pillow>=10.0",

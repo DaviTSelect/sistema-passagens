@@ -5,7 +5,7 @@ Aplicação desktop (Windows) com duas funções para **PDFs de bilhetes aéreos
 - **Conferir fatura:** compara os bilhetes com a **fatura da agência** e gera um CSV, pronto para o Excel, apontando o que confere, o que diverge e o que não foi encontrado.
 - **Extrair trechos:** lê cada trecho de voo e atualiza uma planilha Excel, sem duplicar o que já existe.
 
-![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![Plataforma](https://img.shields.io/badge/plataforma-Windows-lightgrey)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue) ![Plataforma](https://img.shields.io/badge/plataforma-Windows-lightgrey)
 
 ## Como funciona a conferência
 
@@ -96,7 +96,7 @@ A arquitetura e o fluxo de dados estão em [docs/arquitetura.md](docs/arquitetur
 .\build_exe.bat
 ```
 
-Cria `dist\ConferenciaPassagens.exe` (arquivo único, sem console, com o ícone `logo.ico`). O PyInstaller é instalado no `venv` se ainda não estiver.
+Cria `dist\sistema-passagens.exe` (arquivo único, sem console, com o ícone `logo.ico`). O PyInstaller é instalado no `venv` se ainda não estiver.
 
 ## Testes
 

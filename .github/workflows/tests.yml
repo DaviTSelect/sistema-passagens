@@ -10,17 +10,20 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.12"]
+        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Instalar dependências
-        run: python -m pip install -r requirements.txt
+        run: |
+          python -m pip install -r requirements.txt
+          if (Test-Path requirements-test.txt) { python -m pip install -r requirements-test.txt }
+        shell: pwsh
       # Os testes com PDFs reais são pulados automaticamente no CI,
       # pois as pastas pdf/ e fatura/ não são versionadas.
       - name: Executar testes
         env:
           PYTHONPATH: src
-        run: python -m unittest discover -s tests -v
+        run: python -m pytest tests -q

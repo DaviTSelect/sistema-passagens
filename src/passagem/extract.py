@@ -107,8 +107,8 @@ def converter_valor(value: str) -> Decimal | None:
 # ============================================================
 
 def _ler_texto_selecionavel(path: Path) -> str:
-    """Tenta extrair texto diretamente com PyPDF2."""
-    from PyPDF2 import PdfReader  # pesado; importado só quando a tarefa começa
+    """Tenta extrair texto diretamente com pypdf."""
+    from pypdf import PdfReader  # pesado; importado só quando a tarefa começa
     reader = PdfReader(str(path))
 
     if reader.is_encrypted:
