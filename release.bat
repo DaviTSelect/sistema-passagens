@@ -39,7 +39,7 @@ if %ERRORLEVEL% neq 0 ( echo ERRO ao instalar dependencias & pause & exit /b 1 )
 echo [2/5] Executando testes...
 set PYTHONPATH=src
 %PY% -m pytest tests -q
-if %ERRORLEVEL% neq 0 ( echo ERRO nos testes & pause & exit /b 1 )
+if errorlevel 1 ( echo ERRO nos testes & pause & exit /b 1 )
 
 echo [3/5] Compilando executavel...
 if exist dist rmdir /s /q dist
