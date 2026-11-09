@@ -43,16 +43,16 @@ if %ERRORLEVEL% neq 0 ( echo ERRO nos testes & pause & exit /b 1 )
 
 echo [3/5] Compilando executavel...
 if exist dist rmdir /s /q dist
-%PYINST% build\ConferenciaPassagens.spec --noconfirm
+%PYINST% build\sistema-passagens.spec --noconfirm
 if %ERRORLEVEL% neq 0 ( echo ERRO no PyInstaller & pause & exit /b 1 )
-if not exist "dist\ConferenciaPassagens.exe" (
-    echo ERRO: dist\ConferenciaPassagens.exe nao encontrado
+if not exist "dist\sistema-passagens.exe" (
+    echo ERRO: dist\sistema-passagens.exe nao encontrado
     pause & exit /b 1
 )
 
 echo [4/5] Calculando SHA-256...
-for /f "usebackq delims=" %%h in (`powershell -NoProfile -Command "(Get-FileHash 'dist\ConferenciaPassagens.exe' -Algorithm SHA256).Hash.ToLower()"`) do set SHA256=%%h
-echo %SHA256%  ConferenciaPassagens.exe > dist\ConferenciaPassagens.exe.sha256
+for /f "usebackq delims=" %%h in (`powershell -NoProfile -Command "(Get-FileHash 'dist\sistema-passagens.exe' -Algorithm SHA256).Hash.ToLower()"`) do set SHA256=%%h
+echo %SHA256%  sistema-passagens.exe > dist\sistema-passagens.exe.sha256
 echo SHA-256: %SHA256%
 
 echo [5/5] Publicando release %TAG% no GitHub...
@@ -68,16 +68,16 @@ set NOTES_FILE=%TEMP%\release_notes_%VERSION%.md
 (
     echo ## Instalacao
     echo.
-    echo 1. Baixe ConferenciaPassagens.exe
+    echo 1. Baixe sistema-passagens.exe
     echo 2. Coloque na pasta desejada
-    echo 3. Execute ConferenciaPassagens.exe
+    echo 3. Execute sistema-passagens.exe
     echo.
     echo **SHA-256:** %SHA256%
 ) > "%NOTES_FILE%"
 
 gh release create %TAG% ^
-    "dist\ConferenciaPassagens.exe" ^
-    "dist\ConferenciaPassagens.exe.sha256" ^
+    "dist\sistema-passagens.exe" ^
+    "dist\sistema-passagens.exe.sha256" ^
     --title "Extrair Dados de Passagem %TAG%" ^
     --notes-file "%NOTES_FILE%"
 
