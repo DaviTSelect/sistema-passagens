@@ -49,6 +49,10 @@ class JanelaTest(unittest.TestCase):
             patcher = mock.patch.object(gui.QMessageBox, nome)
             setattr(self, nome, patcher.start())
             self.addCleanup(patcher.stop)
+        patcher_q = mock.patch.object(gui.QMessageBox, "question",
+                                      return_value=gui.QMessageBox.StandardButton.No)
+        self.question = patcher_q.start()
+        self.addCleanup(patcher_q.stop)
 
     def test_inicio_ignorado_sem_todas_as_selecoes(self) -> None:
         self.janela.tickets_folder = "x"
@@ -64,7 +68,7 @@ class JanelaTest(unittest.TestCase):
     def test_extracao_concluida_libera_a_janela_e_mostra_o_resumo(self) -> None:
         self.janela.started = True
         resultado = ExtractionResult(1, 1, 1, 0, 0)
-        with mock.patch.object(gui, "executar_extracao", return_value=resultado):
+        with mock.patch("passagem.trechos.executar_extracao", return_value=resultado):
             self.janela._executar_extracao(Path("p"), Path("t.xlsx"))
         self.qt.processEvents()
         self.assertFalse(self.janela.started)
@@ -72,7 +76,7 @@ class JanelaTest(unittest.TestCase):
 
     def test_conferencia_com_erro_mostra_a_mensagem(self) -> None:
         self.janela.started = True
-        with mock.patch.object(gui, "executar_conferencia", side_effect=ValueError("sem PDFs")):
+        with mock.patch("passagem.conference.executar_conferencia", side_effect=ValueError("sem PDFs")):
             self.janela._executar_conferencia(Path("b"), Path("f"), Path("r.csv"))
         self.qt.processEvents()
         self.assertFalse(self.janela.started)

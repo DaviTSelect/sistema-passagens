@@ -84,6 +84,8 @@ def instalar(release: dict, nome_exe: str) -> None:
         raise RuntimeError(f'Release sem {nome_exe}')
     esperado = asset.get('digest', '')
     hash_esperado = esperado.split(':', 1)[1].lower() if esperado.startswith('sha256:') else None
+    if hash_esperado is None:
+        raise RuntimeError('Release sem SHA-256: recusando instalação por segurança')
     exe_atual = Path(sys.executable).resolve()
     if exe_atual.name.lower() != nome_exe.lower():
         raise RuntimeError(f'O executável instalado deve se chamar {nome_exe}')
