@@ -137,26 +137,29 @@ Abra o [CHANGELOG.md](../CHANGELOG.md) e adicione uma seção no topo:
 - Leitura do total em bilhetes LATAM com classe J/P.
 ```
 
-### 3. Gerar o executável
+### 3. Publicar a release (automatizado)
 
-```powershell
-.\build_exe.bat
+Execute `release.bat` na raiz do projeto (duplo clique ou terminal):
+
+```bat
+release.bat
 ```
 
-Aguarde a conclusão. O arquivo `dist\ConferenciaPassagens.exe` é o que será distribuído.
+O script faz automaticamente:
+- Lê a versão do `src/passagem/version.py`
+- Verifica se a tag já existe (evita duplicatas)
+- Instala dependências de build
+- Roda os testes (`pytest`) — interrompe se falhar
+- Compila `ConferenciaPassagens.exe` via PyInstaller
+- Calcula SHA-256 do `.exe`
+- Cria a tag `v1.1.0` e envia para o GitHub
+- Publica a release com o `.exe` e o `.sha256` anexados
 
-### 4. Criar a Release no GitHub
+Pré-requisito único: `gh auth login` (uma vez por máquina).
 
-1. Acesse **https://github.com/DaviTSelect/sistema-passagens/releases/new**.
-2. No campo **Tag**, digite exatamente `v1.1.0` (com o `v` minúsculo). Clique em *Create new tag*.
-3. No campo **Release title**, escreva `v1.1.0` ou um nome descritivo.
-4. No campo de descrição, cole o trecho do `CHANGELOG.md` desta versão.
-5. Em **Attach binaries**, arraste o arquivo `dist\ConferenciaPassagens.exe`. O nome do arquivo deve ser exatamente `ConferenciaPassagens.exe` — não renomeie.
-6. Clique em **Publish release**.
+> **Por que o `.sha256` importa?** O atualizador verifica a integridade do executável baixado antes de substituir o original. Sem o `.sha256` na release, a bolinha fica cinza.
 
-> **Por que o nome do arquivo importa?** O atualizador procura na lista de assets da release um arquivo chamado `ConferenciaPassagens.exe`. Se o nome estiver diferente, o download falha e a bolinha fica cinza.
-
-### 5. Verificar a atualização automática
+### 4. Verificar a atualização automática
 
 Depois de publicar, abra a versão antiga do executável. Em alguns segundos:
 
@@ -176,8 +179,8 @@ Depois de publicar, abra a versão antiga do executável. Em alguns segundos:
 ```
 1. Edite version.py
 2. Atualize CHANGELOG.md
-3. .\build_exe.bat
-4. GitHub → Releases → Nova release com tag vX.Y.Z → anexe ConferenciaPassagens.exe
+3. git add ... && git commit && git push
+4. release.bat  ← faz tudo automaticamente
 ```
 
 ## Fluxo de contribuição
