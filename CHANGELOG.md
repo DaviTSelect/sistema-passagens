@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 
 ## [Não lançado]
 
+---
+
+## [1.1.1] - 2026-11-12
+
+### Corrigido
+- `build/sistema-passagens.spec`: `python312.dll`, `vcruntime140.dll` excluídas do UPX — compressão corrompía a DLL causando crash "Failed to load Python DLL" ao tentar executar
+
 ## [1.0.5] - 2026-11-05
 
 ### Corrigido

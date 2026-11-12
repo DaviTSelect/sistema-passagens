@@ -27,6 +27,7 @@ env/
 /dist/
 *_onefile.spec
 *_debug.spec
+!/build/sistema-passagens.spec
 *.exe
 *.zip
 
